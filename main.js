@@ -1,20 +1,3 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCiLLOrKy9GpiyIAnYzLF9XHSh2uvJchIw",
-  authDomain: "android-e2586.firebaseapp.com",
-  projectId: "android-e2586",
-  storageBucket: "android-e2586.firebasestorage.app",
-  messagingSenderId: "1046005396760",
-  appId: "1:1046005396760:web:5023999e2fad9106f61a6d"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const storage = getStorage(app);
-
 // System Constants & State Initializations
 const DEFAULT_PASSWORD = "JANN_ADMIN_ACCESS";
 const DEFAULT_QUESTION = "What is the name of your signature brand?";
@@ -22,14 +5,8 @@ const DEFAULT_ANSWER = "Jann's Creation";
 
 let currentFolderFilter = "all";
 let isAdminAuthenticated = false;
+let db = null;
 let temporaryContacts = [];
-
-// Expose functions globally for HTML inline event handlers
-window.filterFolder = filterFolder;
-window.switchTab = switchTab;
-window.deleteFolder = deleteFolder;
-window.removeTemporaryContact = removeTemporaryContact;
-window.deleteArtwork = deleteArtwork;
 
 // Initialize Storage Defaults if Empty
 if (!localStorage.getItem("adminPassword")) localStorage.setItem("adminPassword", DEFAULT_PASSWORD);
@@ -59,12 +36,27 @@ const forgotView = document.getElementById("forgot-view");
 const goForgot = document.getElementById("go-forgot");
 const goBackLogin = document.getElementById("go-back-login");
 
-// App initialization calls
-applyProfileDOM();
-renderFolderNavigation();
-renderGallery();
-populateFolderDropdown();
+// Initialize IndexedDB for High-Resolution Image Storage
+const dbRequest = indexedDB.open("JannArtworkDB", 1);
 
+dbRequest.onupgradeneeded = (e) => {
+    db = e.target.result;
+    if (!db.objectStoreNames.contains("artworks")) {
+        db.createObjectStore("artworks", { keyPath: "id" });
+    }
+};
+
+dbRequest.onsuccess = (e) => {
+    db = e.target.result;
+    applyProfileDOM();
+    renderFolderNavigation();
+    renderGallery();
+    populateFolderDropdown();
+};
+
+dbRequest.onerror = () => {
+    alert("Database initialization failed. Storage access is required.");
+};
 
 // Apply profile info to DOM
 function applyProfileDOM() {
@@ -308,28 +300,27 @@ function deleteFolder(index) {
         folders.splice(index, 1);
         localStorage.setItem("folders", JSON.stringify(folders));
         
-        // Update artworks in this folder
-        async function updateFolderArtworks() {
-            try {
-                const q = query(collection(db, "artworks"));
-                const querySnapshot = await getDocs(q);
-                querySnapshot.forEach(async (document) => {
-                    if (document.data().folder === folderName) {
-                        await updateDoc(doc(db, "artworks", document.id), { folder: "Unassigned" });
-                    }
-                });
-                
+        const transaction = db.transaction(["artworks"], "readwrite");
+        const store = transaction.objectStore("artworks");
+        
+        store.openCursor().onsuccess = (event) => {
+            const cursor = event.target.result;
+            if (cursor) {
+                const art = cursor.value;
+                if (art.folder === folderName) {
+                    art.folder = "Unassigned";
+                    cursor.update(art);
+                }
+                cursor.continue();
+            } else {
                 if (currentFolderFilter === folderName) currentFolderFilter = "all";
                 renderFolderNavigation();
                 populateFolderDropdown();
                 renderManageFolders();
                 renderGallery();
                 renderAdminArtworkList();
-            } catch (error) {
-                console.error("Error updating artworks folder:", error);
             }
-        }
-        updateFolderArtworks();
+        };
     }
 }
 
@@ -353,25 +344,16 @@ document.getElementById("submit-upload").addEventListener("click", () => {
     }
     
     const file = fileInput.files[0];
-    const now = new Date();
-    const formattedDate = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const reader = new FileReader();
     
-    const uploadBtn = document.getElementById("submit-upload");
-    const originalText = uploadBtn.innerText;
-    uploadBtn.innerText = "Publishing... Please wait";
-    uploadBtn.disabled = true;
-
-    try {
-        // Upload to Firebase Storage as binary file (much faster)
-        const uniqueFilename = `artworks/${Date.now()}_${file.name}`;
-        const storageRef = ref(storage, uniqueFilename);
-        await uploadBytes(storageRef, file);
-        const downloadURL = await getDownloadURL(storageRef);
-
+    reader.onloadend = () => {
+        const base64Img = reader.result;
+        const now = new Date();
+        const formattedDate = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        
         const newArtwork = {
-            timestamp: Date.now(),
-            image: downloadURL,
-            imageRef: uniqueFilename,
+            id: Date.now(),
+            image: base64Img,
             title: titleInput.value.trim(),
             description: descInput.value.trim(),
             date: formattedDate,
@@ -379,77 +361,78 @@ document.getElementById("submit-upload").addEventListener("click", () => {
             folder: folderSelect.value
         };
         
-        // Save to Firestore
-        await addDoc(collection(db, "artworks"), newArtwork);
+        const transaction = db.transaction(["artworks"], "readwrite");
+        const store = transaction.objectStore("artworks");
+        const request = store.add(newArtwork);
         
-        fileInput.value = "";
-        titleInput.value = "";
-        descInput.value = "";
-        ownerInput.value = localStorage.getItem("defaultOwnership");
+        request.onsuccess = () => {
+            fileInput.value = "";
+            titleInput.value = "";
+            descInput.value = "";
+            ownerInput.value = localStorage.getItem("defaultOwnership");
+            
+            alert("High-resolution graphic published successfully.");
+            renderGallery();
+            renderAdminArtworkList();
+        };
         
-        alert("High-resolution graphic published successfully.");
-        renderGallery();
-        renderAdminArtworkList();
-    } catch (error) {
-        console.error(error);
-        alert("Error saving the artwork asset. Ensure Firebase config is correct and rules allow writes.");
-    } finally {
-        uploadBtn.innerText = originalText;
-        uploadBtn.disabled = false;
-    }
+        request.onerror = () => {
+            alert("Error saving the artwork asset. Try smaller file dimensions if problem persists.");
+        };
+    };
+    
+    reader.readAsDataURL(file);
 });
 
-async function renderGallery() {
+function renderGallery() {
     const gallery = document.getElementById("gallery");
-    if (!gallery) return;
+    if (!gallery || !db) return;
+    gallery.innerHTML = "";
     
-    gallery.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999; padding: 40px 0;">Loading...</p>';
+    const transaction = db.transaction(["artworks"], "readonly");
+    const store = transaction.objectStore("artworks");
+    const artworks = [];
     
-    try {
-        const q = query(collection(db, "artworks"), orderBy("timestamp", "desc"));
-        const querySnapshot = await getDocs(q);
-        const artworks = [];
-        
-        querySnapshot.forEach((doc) => {
-            artworks.push({ id: doc.id, ...doc.data() });
-        });
-        
-        gallery.innerHTML = "";
-        
-        const filtered = artworks.filter(art => {
-            if (currentFolderFilter === "all") return true;
-            return art.folder === currentFolderFilter;
-        });
-        
-        if (filtered.length === 0) {
-            gallery.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999; padding: 40px 0;">No illustrations cataloged in this collection.</p>';
-            return;
+    store.openCursor().onsuccess = (event) => {
+        const cursor = event.target.result;
+        if (cursor) {
+            artworks.push(cursor.value);
+            cursor.continue();
+        } else {
+            artworks.sort((a, b) => b.id - a.id);
+            
+            const filtered = artworks.filter(art => {
+                if (currentFolderFilter === "all") return true;
+                return art.folder === currentFolderFilter;
+            });
+            
+            if (filtered.length === 0) {
+                gallery.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999; padding: 40px 0;">No illustrations cataloged in this collection.</p>';
+                return;
+            }
+            
+            filtered.forEach(art => {
+                const card = document.createElement("div");
+                card.className = "card";
+                    
+                card.innerHTML = `
+                    <div class="card-img-container">
+                        <img src="${art.image}" alt="${art.title}">
+                    </div>
+                    <div class="card-details">
+                        <h3 class="card-title">${art.title}</h3>
+                        <p class="card-desc">${art.description}</p>
+                        <p class="card-meta"><strong>Date of publication:</strong> ${art.date}</p>
+                        <p class="card-meta"><strong>Ownership:</strong> ${art.ownership}</p>
+                    </div>
+                `;
+                gallery.appendChild(card);
+            });
         }
-        
-        filtered.forEach(art => {
-            const card = document.createElement("div");
-            card.className = "card";
-                
-            card.innerHTML = `
-                <div class="card-img-container">
-                    <img src="${art.image}" alt="${art.title}">
-                </div>
-                <div class="card-details">
-                    <h3 class="card-title">${art.title}</h3>
-                    <p class="card-desc">${art.description}</p>
-                    <p class="card-meta"><strong>Date of publication:</strong> ${art.date}</p>
-                    <p class="card-meta"><strong>Ownership:</strong> ${art.ownership}</p>
-                </div>
-            `;
-            gallery.appendChild(card);
-        });
-    } catch (error) {
-        console.error("Error loading gallery:", error);
-        gallery.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: red; padding: 40px 0;">Failed to load artworks.</p>';
-    }
+    };
 }
 
-async function renderAdminArtworkList() {
+function renderAdminArtworkList() {
     let listContainer = document.getElementById("admin-artwork-list-container");
     
     if (!listContainer) {
@@ -473,61 +456,56 @@ async function renderAdminArtworkList() {
         uploadTab.appendChild(listContainer);
     }
     
-    listContainer.innerHTML = '<li style="color: #999; font-size: 12px;">Loading...</li>';
+    listContainer.innerHTML = "";
     
-    try {
-        const q = query(collection(db, "artworks"), orderBy("timestamp", "desc"));
-        const querySnapshot = await getDocs(q);
-        const artworks = [];
-        
-        querySnapshot.forEach((doc) => {
-            artworks.push({ id: doc.id, ...doc.data() });
-        });
-        
-        listContainer.innerHTML = "";
-        
-        if (artworks.length === 0) {
-            listContainer.innerHTML = '<li style="color: #999; font-size: 12px;">No active illustrations found.</li>';
-            return;
-        }
-        
-        artworks.forEach(art => {
-            const li = document.createElement("li");
-            li.style.display = "flex";
-            li.style.justifyContent = "space-between";
-            li.style.alignItems = "center";
-            li.style.padding = "10px 0";
-            li.style.borderBottom = "1px solid #f5f5f5";
+    const transaction = db.transaction(["artworks"], "readonly");
+    const store = transaction.objectStore("artworks");
+    const artworks = [];
+    
+    store.openCursor().onsuccess = (event) => {
+        const cursor = event.target.result;
+        if (cursor) {
+            artworks.push(cursor.value);
+            cursor.continue();
+        } else {
+            artworks.sort((a, b) => b.id - a.id);
             
-            li.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <img src="${art.image}" style="width: 40px; height: 40px; object-fit: cover; border: 1px solid #ddd;">
-                    <span style="font-size: 13px;">${art.title} <small style="color: #888;">(${art.folder})</small></span>
-                </div>
-                <button class="remove-btn" type="button" onclick="deleteArtwork('${art.id}', '${art.imageRef}')">&times; Remove</button>
-            `;
-            listContainer.appendChild(li);
-        });
-    } catch (error) {
-        console.error("Error loading admin list:", error);
-        listContainer.innerHTML = '<li style="color: red; font-size: 12px;">Error loading data.</li>';
-    }
+            if (artworks.length === 0) {
+                listContainer.innerHTML = '<li style="color: #999; font-size: 12px;">No active illustrations found.</li>';
+                return;
+            }
+            
+            artworks.forEach(art => {
+                const li = document.createElement("li");
+                li.style.display = "flex";
+                li.style.justify = "space-between";
+                li.style.alignItems = "center";
+                li.style.padding = "10px 0";
+                li.style.borderBottom = "1px solid #f5f5f5";
+                
+                li.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <img src="${art.image}" style="width: 40px; height: 40px; object-fit: cover; border: 1px solid #ddd;">
+                        <span style="font-size: 13px;">${art.title} <small style="color: #888;">(${art.folder})</small></span>
+                    </div>
+                    <button class="remove-btn" type="button" onclick="deleteArtwork(${art.id})">&times; Remove</button>
+                `;
+                listContainer.appendChild(li);
+            });
+        }
+    };
 }
 
-async function deleteArtwork(id, imageRefPath) {
+function deleteArtwork(id) {
     if (confirm("Proceed to permanently delete this unique design entry?")) {
-        try {
-            await deleteDoc(doc(db, "artworks", id));
-            if (imageRefPath && imageRefPath !== "undefined") {
-                const storageRef = ref(storage, imageRefPath);
-                await deleteObject(storageRef);
-            }
+        const transaction = db.transaction(["artworks"], "readwrite");
+        const store = transaction.objectStore("artworks");
+        const request = store.delete(id);
+        
+        request.onsuccess = () => {
             renderGallery();
             renderAdminArtworkList();
-        } catch (error) {
-            console.error("Error deleting artwork:", error);
-            alert("Error removing the design entry.");
-        }
+        };
     }
 }
 
