@@ -2,80 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="site-title-meta">JANN G. ARTWORK | Fashion Illustration</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Firebase SDKs -->
-    <script type="module">
-        // Import Firebase modules and expose them globally for inline handlers
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
-        import { getFirestore, collection, doc, setDoc, getDocs, deleteDoc, query, orderBy, updateDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
-        
-        const firebaseConfig = {
-            apiKey: "AIzaSyCiLLOrKy9GpiyIAnYzLF9XHSh2uvJchIw",
-            authDomain: "android-e2586.firebaseapp.com",
-            projectId: "android-e2586",
-            storageBucket: "android-e2586.firebasestorage.app",
-            messagingSenderId: "1046005396760",
-            appId: "1:1046005396760:web:5023999e2fad9106f61a6d",
-            measurementId: "G-QH0YWHLZZ3"
-        };
-        
-        const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
-        const db = getFirestore(app);
-        const storage = getStorage(app);
-        
-        // Make services globally available for non-module script
-        window.firebaseDB = db;
-        window.firebaseStorage = storage;
-        window.firebaseRef = ref;
-        window.firebaseUploadString = uploadString;
-        window.firebaseGetDownloadURL = getDownloadURL;
-        window.firebaseDeleteObject = deleteObject;
-        window.firestoreHelpers = { collection, doc, setDoc, getDocs, deleteDoc, query, orderBy, updateDoc, addDoc };
-        
-        // Dispatch custom event to notify main script that firebase is ready
-        window.dispatchEvent(new Event("firebase-ready"));
-    </script>
-    <style>
-        /* additional small inline overrides to keep consistent with existing CSS */
-        .admin-list img {
-            border-radius: 4px;
-        }
-        .toast-msg {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #1a1a1a;
-            color: #fff;
-            padding: 10px 24px;
-            border-radius: 40px;
-            font-size: 12px;
-            z-index: 2000;
-            letter-spacing: 1px;
-            font-family: 'Montserrat', sans-serif;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-        }
-        .toast-msg.show {
-            opacity: 1;
-        }
-        .loading-spinner {
-            text-align: center;
-            padding: 40px;
-            color: #a89260;
-            font-size: 13px;
-            letter-spacing: 2px;
-        }
-        .card .card-img-container {
-            background: #f3f0e8;
-        }
-    </style>
 </head>
 <body>
 
@@ -93,9 +22,7 @@
             </div>
         </section>
 
-        <section id="gallery" class="gallery-grid">
-            <div class="loading-spinner">Loading masterpieces ...</div>
-        </section>
+        <section id="gallery" class="gallery-grid"></section>
     </main>
 
     <div id="auth-modal" class="modal">
@@ -153,9 +80,6 @@
                     </select>
                 </div>
                 <button id="submit-upload" class="action-btn">Publish Illustration</button>
-                <hr class="divider">
-                <h3>Published Illustrations</h3>
-                <ul id="admin-artwork-list-container" class="admin-list"></ul>
             </div>
 
             <div id="folder-tab" class="tab-content hidden">
@@ -169,34 +93,47 @@
             <div id="privacy-tab" class="tab-content hidden">
                 <h3>Edit Profile Info</h3>
                 <div class="form-group">
-                    <input type="text" id="edit-brand-name" placeholder="Brand Name">
+                    <input type="text" id="edit-brand-name" placeholder="Brand Name (e.g., JANN'S CREATION)">
                 </div>
                 <div class="form-group">
-                    <input type="text" id="edit-subtitle" placeholder="Subtitle">
+                    <input type="text" id="edit-subtitle" placeholder="Subtitle (e.g., Fashion & Glamour)">
                 </div>
                 <div class="form-group">
                     <input type="text" id="edit-default-owner" placeholder="Default Ownership Text">
                 </div>
-                <h4>Manage Contacts & Platforms</h4>
+                
+                <h4 style="font-size: 11px; text-transform: uppercase; margin: 15px 0 5px 0; color: #777;">Manage Contacts & Platforms</h4>
                 <div class="form-group inline-form">
-                    <input type="text" id="new-platform-name" placeholder="Platform (e.g., Instagram)">
+                    <input type="text" id="new-platform-name" placeholder="Platform (e.g., Instagram, TikTok)">
                     <input type="text" id="new-platform-url" placeholder="Full Link URL">
-                    <button id="submit-contact" class="action-btn" style="margin:0; padding:12px;">Add</button>
+                    <button id="submit-contact" class="action-btn" style="margin: 0; padding: 12px;">Add</button>
                 </div>
-                <ul id="admin-contacts-list" class="admin-list"></ul>
+                <ul id="admin-contacts-list" class="admin-list" style="margin-bottom: 15px;"></ul>
+                
                 <button id="submit-profile-settings" class="action-btn">Save Profile Updates</button>
+
                 <hr class="divider">
+
                 <h3>Update System Password</h3>
-                <div class="input-group">
-                    <input type="password" id="new-sys-password" placeholder="New System Password">
-                    <button type="button" id="toggle-new-pwd" class="view-pwd-btn">View</button>
+                <div class="form-group">
+                    <div class="input-group">
+                        <input type="password" id="new-sys-password" placeholder="New System Password">
+                        <button type="button" id="toggle-new-pwd" class="view-pwd-btn">View</button>
+                    </div>
                 </div>
                 <button id="submit-new-password" class="action-btn">Save New Password</button>
+
                 <hr class="divider">
+
                 <h3>Configure Security Question</h3>
-                <input type="text" id="new-security-question" placeholder="Security Question">
-                <input type="text" id="new-security-answer" placeholder="Answer">
-                <button id="submit-security-settings" class="action-btn">Update Security</button>
+                <div class="form-group">
+                    <input type="text" id="new-security-question" placeholder="Custom Security Question">
+                </div>
+                <div class="form-group">
+                    <input type="text" id="new-security-answer" placeholder="Answer to Question">
+                </div>
+                <button id="submit-security-settings" class="action-btn">Update Security Settings</button>
+                
                 <hr class="divider">
                 <button id="admin-logout" class="action-btn secondary-btn">Exit Session</button>
             </div>
@@ -208,419 +145,7 @@
         <p class="credits" id="footer-credits">&copy; 2026 JANN G. ARTWORK. All Rights Reserved.</p>
         <button id="admin-login-btn" class="nav-btn small-admin-btn">Admin Access</button>
     </footer>
-    <div id="toast-message" class="toast-msg"></div>
 
-    <script>
-        // ---------- FIREBASE INTEGRATION ----------
-        let db, storage, firestoreHelpers, storageRefFunc, uploadStringFunc, getDownloadURLFunc, deleteObjectFunc;
-        let collectionRef, artworksCollection, settingsDocRef;
-        let isFirebaseReady = false;
-        
-        window.addEventListener("firebase-ready", () => {
-            db = window.firebaseDB;
-            storage = window.firebaseStorage;
-            firestoreHelpers = window.firestoreHelpers;
-            storageRefFunc = window.firebaseRef;
-            uploadStringFunc = window.firebaseUploadString;
-            getDownloadURLFunc = window.firebaseGetDownloadURL;
-            deleteObjectFunc = window.firebaseDeleteObject;
-            collectionRef = firestoreHelpers.collection;
-            artworksCollection = collectionRef(db, "artworks");
-            settingsDocRef = firestoreHelpers.doc(db, "settings/profile");
-            isFirebaseReady = true;
-            initApp();
-        });
-        
-        let currentFolderFilter = "all";
-        let isAdminAuthenticated = false;
-        let temporaryContacts = [];
-        
-        // ---------- Helper: Toast ----------
-        function showToast(msg, duration = 2500) {
-            const toast = document.getElementById("toast-message");
-            toast.innerText = msg;
-            toast.classList.add("show");
-            setTimeout(() => toast.classList.remove("show"), duration);
-        }
-        
-        // ---------- Load Settings from Firestore ----------
-        async function loadFirebaseSettings() {
-            if (!isFirebaseReady) return;
-            const docSnap = await firestoreHelpers.getDoc(settingsDocRef);
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                localStorage.setItem("brandName", data.brandName || "JANN G. ARTWORK");
-                localStorage.setItem("siteSubtitle", data.siteSubtitle || "Fashion Illustration");
-                localStorage.setItem("defaultOwnership", data.defaultOwnership || "JANN G. ARTWORK");
-                localStorage.setItem("adminPassword", data.adminPassword || "JANN_ADMIN_ACCESS");
-                localStorage.setItem("securityQuestion", data.securityQuestion || "What is the name of your signature brand?");
-                localStorage.setItem("securityAnswer", data.securityAnswer || "Jann's Creation");
-                localStorage.setItem("folders", JSON.stringify(data.folders || ["Bridal", "Pageantry"]));
-                localStorage.setItem("contactPlatforms", JSON.stringify(data.contactPlatforms || [{ name: "Instagram", url: "https://instagram.com/laiyts_" }]));
-            } else {
-                // initialize defaults in firestore
-                const defaults = {
-                    brandName: "JANN G. ARTWORK",
-                    siteSubtitle: "Fashion Illustration",
-                    defaultOwnership: "JANN G. ARTWORK",
-                    adminPassword: "JANN_ADMIN_ACCESS",
-                    securityQuestion: "What is the name of your signature brand?",
-                    securityAnswer: "Jann's Creation",
-                    folders: ["Bridal", "Pageantry"],
-                    contactPlatforms: [{ name: "Instagram", url: "https://instagram.com/laiyts_" }]
-                };
-                await firestoreHelpers.setDoc(settingsDocRef, defaults);
-                Object.keys(defaults).forEach(k => localStorage.setItem(k, JSON.stringify(defaults[k])));
-            }
-            applyProfileDOM();
-            renderFolderNavigation();
-            await loadArtworksFromFirestore();
-            populateFolderDropdown();
-        }
-        
-        // Save all settings to Firestore (profile, folders, contacts, password, security)
-        async function persistSettingsToFirebase() {
-            if (!isFirebaseReady) return;
-            const settings = {
-                brandName: localStorage.getItem("brandName"),
-                siteSubtitle: localStorage.getItem("siteSubtitle"),
-                defaultOwnership: localStorage.getItem("defaultOwnership"),
-                adminPassword: localStorage.getItem("adminPassword"),
-                securityQuestion: localStorage.getItem("securityQuestion"),
-                securityAnswer: localStorage.getItem("securityAnswer"),
-                folders: JSON.parse(localStorage.getItem("folders") || '["Bridal","Pageantry"]'),
-                contactPlatforms: JSON.parse(localStorage.getItem("contactPlatforms") || '[]')
-            };
-            await firestoreHelpers.setDoc(settingsDocRef, settings);
-        }
-        
-        // ---------- Artworks CRUD (Firestore + Storage) ----------
-        async function loadArtworksFromFirestore() {
-            if (!isFirebaseReady) return;
-            const q = firestoreHelpers.query(artworksCollection, firestoreHelpers.orderBy("createdAt", "desc"));
-            const snapshot = await firestoreHelpers.getDocs(q);
-            const artworks = [];
-            for (const docSnap of snapshot.docs) {
-                const data = docSnap.data();
-                artworks.push({ id: docSnap.id, ...data });
-            }
-            window.cachedArtworks = artworks;
-            renderGallery();
-            if (isAdminAuthenticated) renderAdminArtworkList();
-        }
-        
-        async function deleteArtworkFromFirebase(artId, storagePath) {
-            if (!isFirebaseReady) return;
-            try {
-                if (storagePath) {
-                    const fileRef = storageRefFunc(storage, storagePath);
-                    await deleteObjectFunc(fileRef);
-                }
-                await firestoreHelpers.deleteDoc(firestoreHelpers.doc(db, "artworks", artId));
-                showToast("Design permanently removed");
-                await loadArtworksFromFirestore();
-            } catch (err) { console.error(err); showToast("Delete failed"); }
-        }
-        
-        async function uploadArtworkToFirebase(file, title, description, ownership, folder) {
-            if (!isFirebaseReady) throw new Error("Firebase not ready");
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = async () => {
-                    const base64 = reader.result;
-                    const fileName = `artworks/${Date.now()}_${title.replace(/[^a-z0-9]/gi, '_')}.jpg`;
-                    const storageRef = storageRefFunc(storage, fileName);
-                    try {
-                        await uploadStringFunc(storageRef, base64, 'data_url');
-                        const downloadURL = await getDownloadURLFunc(storageRef);
-                        const newArt = {
-                            title,
-                            description,
-                            ownership,
-                            folder: folder || "Unassigned",
-                            imageUrl: downloadURL,
-                            storagePath: fileName,
-                            date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-                            createdAt: Date.now()
-                        };
-                        const docRef = await firestoreHelpers.addDoc(artworksCollection, newArt);
-                        resolve({ id: docRef.id, ...newArt });
-                    } catch (err) { reject(err); }
-                };
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        }
-        
-        // global delete function exposed
-        window.deleteArtwork = async (artId, storagePath) => {
-            if (!isAdminAuthenticated) { showToast("Admin access required"); return; }
-            if (confirm("Permanently delete this illustration?")) {
-                await deleteArtworkFromFirebase(artId, storagePath);
-            }
-        };
-        
-        // Render gallery from cached artworks
-        function renderGallery() {
-            const gallery = document.getElementById("gallery");
-            if (!gallery) return;
-            const artworks = window.cachedArtworks || [];
-            const filtered = artworks.filter(art => currentFolderFilter === "all" || art.folder === currentFolderFilter);
-            if (filtered.length === 0) {
-                gallery.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999; padding: 40px 0;">No illustrations cataloged in this collection.</p>';
-                return;
-            }
-            gallery.innerHTML = "";
-            filtered.forEach(art => {
-                const card = document.createElement("div");
-                card.className = "card";
-                card.innerHTML = `
-                    <div class="card-img-container">
-                        <img src="${art.imageUrl}" alt="${art.title}" loading="lazy">
-                    </div>
-                    <div class="card-details">
-                        <h3 class="card-title">${escapeHtml(art.title)}</h3>
-                        <p class="card-desc">${escapeHtml(art.description || '')}</p>
-                        <p class="card-meta"><strong>Date of publication:</strong> ${art.date}</p>
-                        <p class="card-meta"><strong>Ownership:</strong> ${escapeHtml(art.ownership)}</p>
-                    </div>
-                `;
-                gallery.appendChild(card);
-            });
-        }
-        
-        function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m) { if(m === '&') return '&amp;'; if(m === '<') return '&lt;'; if(m === '>') return '&gt;'; return m;}); }
-        
-        // ---------- Profile & local storage sync / firestore sync ----------
-        function applyProfileDOM() {
-            const brand = localStorage.getItem("brandName");
-            const sub = localStorage.getItem("siteSubtitle");
-            document.getElementById("display-brand-name").innerText = brand;
-            document.getElementById("display-subtitle").innerText = sub;
-            document.getElementById("site-title-meta").innerText = `${brand} | ${sub}`;
-            document.getElementById("artwork-ownership").value = localStorage.getItem("defaultOwnership");
-            document.getElementById("footer-credits").innerHTML = `&copy; 2026 ${brand}. All Rights Reserved.`;
-            const contacts = JSON.parse(localStorage.getItem("contactPlatforms") || "[]");
-            const footerSocials = document.getElementById("footer-socials");
-            footerSocials.innerHTML = "";
-            contacts.forEach(c => {
-                footerSocials.innerHTML += `<a href="${c.url}" target="_blank" class="social-item">${escapeHtml(c.name)}</a>`;
-            });
-        }
-        
-        function getFolders() { return JSON.parse(localStorage.getItem("folders") || '["Bridal","Pageantry"]'); }
-        function saveFolders(folders) { localStorage.setItem("folders", JSON.stringify(folders)); persistSettingsToFirebase(); }
-        
-        function renderFolderNavigation() {
-            const container = document.getElementById("folder-list");
-            const folders = getFolders();
-            let html = `<button class="folder-tag ${currentFolderFilter === 'all' ? 'active' : ''}" onclick="filterFolder('all')">All Designs</button>`;
-            folders.forEach(f => { html += `<button class="folder-tag ${currentFolderFilter === f ? 'active' : ''}" onclick="filterFolder('${f.replace(/'/g, "\\'")}')">${escapeHtml(f)}</button>`; });
-            container.innerHTML = html;
-        }
-        
-        window.filterFolder = function(folder) { currentFolderFilter = folder; renderFolderNavigation(); renderGallery(); };
-        
-        function populateFolderDropdown() {
-            const select = document.getElementById("artwork-folder-select");
-            if (!select) return;
-            const folders = getFolders();
-            let html = '<option value="Unassigned">Unassigned</option>';
-            folders.forEach(f => { html += `<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`; });
-            select.innerHTML = html;
-        }
-        
-        function renderManageFolders() {
-            const list = document.getElementById("manage-folder-list");
-            const folders = getFolders();
-            list.innerHTML = "";
-            folders.forEach((folder, idx) => {
-                const li = document.createElement("li");
-                li.innerHTML = `<span>${escapeHtml(folder)}</span> <button class="remove-btn" onclick="deleteFolder(${idx})">&times; Remove</button>`;
-                list.appendChild(li);
-            });
-        }
-        
-        window.deleteFolder = async (index) => {
-            let folders = getFolders();
-            const folderName = folders[index];
-            if (confirm(`Delete folder "${folderName}"? Artworks inside will become Unassigned.`)) {
-                folders.splice(index, 1);
-                saveFolders(folders);
-                // update artworks in firestore that had this folder
-                const artworks = window.cachedArtworks || [];
-                for (let art of artworks) {
-                    if (art.folder === folderName) {
-                        const artRef = firestoreHelpers.doc(db, "artworks", art.id);
-                        await firestoreHelpers.updateDoc(artRef, { folder: "Unassigned" });
-                    }
-                }
-                await loadArtworksFromFirestore();
-                renderFolderNavigation();
-                populateFolderDropdown();
-                renderManageFolders();
-                if (currentFolderFilter === folderName) filterFolder('all');
-            }
-        };
-        
-        async function renderAdminArtworkList() {
-            const container = document.getElementById("admin-artwork-list-container");
-            if (!container) return;
-            const artworks = window.cachedArtworks || [];
-            if (artworks.length === 0) { container.innerHTML = '<li style="color:#999;">No illustrations published.</li>'; return; }
-            container.innerHTML = "";
-            artworks.forEach(art => {
-                const li = document.createElement("li");
-                li.style.display = "flex";
-                li.style.justifyContent = "space-between";
-                li.style.alignItems = "center";
-                li.innerHTML = `
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <img src="${art.imageUrl}" style="width:40px; height:40px; object-fit:cover; border-radius:4px;">
-                        <span style="font-size:13px;">${escapeHtml(art.title)} <small>(${escapeHtml(art.folder)})</small></span>
-                    </div>
-                    <button class="remove-btn" onclick="deleteArtwork('${art.id}', '${art.storagePath}')">&times; Remove</button>
-                `;
-                container.appendChild(li);
-            });
-        }
-        
-        // ----- Admin UI & Auth -----
-        function showView(view) { 
-            const loginDiv = document.getElementById("login-view");
-            const forgotDiv = document.getElementById("forgot-view");
-            if (view === "login") { loginDiv.classList.remove("hidden"); forgotDiv.classList.add("hidden"); }
-            else { loginDiv.classList.add("hidden"); forgotDiv.classList.remove("hidden"); document.getElementById("challenge-question-text").innerText = localStorage.getItem("securityQuestion"); }
-        }
-        
-        document.getElementById("submit-login").addEventListener("click", () => {
-            const entered = document.getElementById("login-password").value;
-            if (entered === localStorage.getItem("adminPassword")) {
-                isAdminAuthenticated = true;
-                document.getElementById("auth-modal").style.display = "none";
-                openAdminPanel();
-            } else { showToast("Incorrect password"); }
-        });
-        
-        document.getElementById("submit-recovery").addEventListener("click", () => {
-            const answer = document.getElementById("recovery-answer").value.trim();
-            if (answer.toLowerCase() === localStorage.getItem("securityAnswer").toLowerCase()) {
-                alert("Recovery successful. Use master password: " + localStorage.getItem("adminPassword"));
-                showView("login");
-            } else { alert("Invalid answer"); }
-        });
-        
-        function openAdminPanel() {
-            document.getElementById("admin-panel-modal").style.display = "block";
-            populateFolderDropdown();
-            renderManageFolders();
-            renderAdminArtworkList();
-            document.getElementById("edit-brand-name").value = localStorage.getItem("brandName");
-            document.getElementById("edit-subtitle").value = localStorage.getItem("siteSubtitle");
-            document.getElementById("edit-default-owner").value = localStorage.getItem("defaultOwnership");
-            temporaryContacts = JSON.parse(localStorage.getItem("contactPlatforms") || "[]");
-            renderAdminContacts();
-            document.getElementById("new-security-question").value = localStorage.getItem("securityQuestion");
-            document.getElementById("new-security-answer").value = localStorage.getItem("securityAnswer");
-        }
-        
-        function renderAdminContacts() {
-            const list = document.getElementById("admin-contacts-list");
-            list.innerHTML = "";
-            temporaryContacts.forEach((c, idx) => {
-                const li = document.createElement("li");
-                li.innerHTML = `<span><strong>${escapeHtml(c.name)}:</strong> ${escapeHtml(c.url)}</span> <button class="remove-btn" onclick="removeTempContact(${idx})">&times;</button>`;
-                list.appendChild(li);
-            });
-        }
-        window.removeTempContact = (idx) => { temporaryContacts.splice(idx,1); renderAdminContacts(); };
-        
-        document.getElementById("submit-contact").addEventListener("click", () => {
-            const name = document.getElementById("new-platform-name").value.trim();
-            const url = document.getElementById("new-platform-url").value.trim();
-            if(name && url) { temporaryContacts.push({name, url}); document.getElementById("new-platform-name").value = ""; document.getElementById("new-platform-url").value = ""; renderAdminContacts(); }
-            else showToast("Both fields required");
-        });
-        
-        document.getElementById("submit-profile-settings").addEventListener("click", async () => {
-            const brand = document.getElementById("edit-brand-name").value.trim();
-            const sub = document.getElementById("edit-subtitle").value.trim();
-            const defOwner = document.getElementById("edit-default-owner").value.trim();
-            if(brand && sub && defOwner) {
-                localStorage.setItem("brandName", brand);
-                localStorage.setItem("siteSubtitle", sub);
-                localStorage.setItem("defaultOwnership", defOwner);
-                localStorage.setItem("contactPlatforms", JSON.stringify(temporaryContacts));
-                await persistSettingsToFirebase();
-                applyProfileDOM();
-                showToast("Profile updated globally");
-            } else showToast("Fill all fields");
-        });
-        
-        document.getElementById("submit-new-password").addEventListener("click", async () => {
-            const newPwd = document.getElementById("new-sys-password").value.trim();
-            if(newPwd) { localStorage.setItem("adminPassword", newPwd); await persistSettingsToFirebase(); showToast("Password updated"); document.getElementById("new-sys-password").value = ""; }
-        });
-        document.getElementById("submit-security-settings").addEventListener("click", async () => {
-            const q = document.getElementById("new-security-question").value.trim();
-            const a = document.getElementById("new-security-answer").value.trim();
-            if(q && a) { localStorage.setItem("securityQuestion", q); localStorage.setItem("securityAnswer", a); await persistSettingsToFirebase(); showToast("Security updated"); }
-        });
-        document.getElementById("submit-folder").addEventListener("click", async () => {
-            const name = document.getElementById("new-folder-name").value.trim();
-            if(!name) return;
-            let folders = getFolders();
-            if(!folders.includes(name)) { folders.push(name); saveFolders(folders); renderFolderNavigation(); populateFolderDropdown(); renderManageFolders(); document.getElementById("new-folder-name").value = ""; showToast("Folder created"); }
-            else showToast("Folder exists");
-        });
-        document.getElementById("submit-upload").addEventListener("click", async () => {
-            const file = document.getElementById("artwork-file").files[0];
-            const title = document.getElementById("artwork-title").value.trim();
-            if(!file || !title) { showToast("Image and Title required"); return; }
-            const desc = document.getElementById("artwork-desc").value;
-            const owner = document.getElementById("artwork-ownership").value.trim() || localStorage.getItem("defaultOwnership");
-            const folder = document.getElementById("artwork-folder-select").value;
-            try {
-                showToast("Uploading masterpiece...");
-                await uploadArtworkToFirebase(file, title, desc, owner, folder);
-                document.getElementById("artwork-file").value = "";
-                document.getElementById("artwork-title").value = "";
-                document.getElementById("artwork-desc").value = "";
-                await loadArtworksFromFirestore();
-                showToast("Published successfully");
-            } catch(e) { console.error(e); showToast("Upload failed: " + e.message); }
-        });
-        
-        document.getElementById("admin-logout").addEventListener("click", () => { isAdminAuthenticated = false; document.getElementById("admin-panel-modal").style.display = "none"; showToast("Session ended"); });
-        
-        function switchTab(tabId) {
-            document.querySelectorAll(".tab-content").forEach(t => t.classList.add("hidden"));
-            document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-            document.getElementById(tabId).classList.remove("hidden");
-            event.currentTarget.classList.add("active");
-        }
-        window.switchTab = switchTab;
-        
-        function setupPasswordToggle(btnId, inputId) {
-            const btn = document.getElementById(btnId);
-            const inp = document.getElementById(inputId);
-            if(btn && inp) btn.addEventListener("click", () => { inp.type = inp.type === "password" ? "text" : "password"; btn.innerText = inp.type === "password" ? "View" : "Hide"; });
-        }
-        setupPasswordToggle("toggle-login-pwd", "login-password");
-        setupPasswordToggle("toggle-new-pwd", "new-sys-password");
-        
-        document.getElementById("admin-login-btn").addEventListener("click", () => { if(isAdminAuthenticated) openAdminPanel(); else { showView("login"); document.getElementById("auth-modal").style.display = "block"; } });
-        document.getElementById("close-auth").addEventListener("click", () => document.getElementById("auth-modal").style.display = "none");
-        document.getElementById("close-admin-panel").addEventListener("click", () => document.getElementById("admin-panel-modal").style.display = "none");
-        window.addEventListener("click", (e) => { if(e.target === document.getElementById("auth-modal")) document.getElementById("auth-modal").style.display = "none"; if(e.target === document.getElementById("admin-panel-modal")) document.getElementById("admin-panel-modal").style.display = "none"; });
-        document.getElementById("go-forgot").addEventListener("click", () => showView("forgot"));
-        document.getElementById("go-back-login").addEventListener("click", () => showView("login"));
-        
-        async function initApp() {
-            await loadFirebaseSettings();
-            if(window.cachedArtworks) renderGallery();
-        }
-        if(!isFirebaseReady) { window.addEventListener("firebase-ready", initApp); } else { initApp(); }
-    </script>
+    <script src="main.js"></script>
 </body>
 </html>
