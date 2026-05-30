@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCiLLOrKy9GpiyIAnYzLF9XHSh2uvJchIw",
@@ -353,57 +353,50 @@ document.getElementById("submit-upload").addEventListener("click", () => {
     }
     
     const file = fileInput.files[0];
-    const reader = new FileReader();
+    const now = new Date();
+    const formattedDate = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     
-    reader.onloadend = async () => {
-        const base64Img = reader.result;
-        const now = new Date();
-        const formattedDate = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const uploadBtn = document.getElementById("submit-upload");
+    const originalText = uploadBtn.innerText;
+    uploadBtn.innerText = "Publishing... Please wait";
+    uploadBtn.disabled = true;
+
+    try {
+        // Upload to Firebase Storage as binary file (much faster)
+        const uniqueFilename = `artworks/${Date.now()}_${file.name}`;
+        const storageRef = ref(storage, uniqueFilename);
+        await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(storageRef);
+
+        const newArtwork = {
+            timestamp: Date.now(),
+            image: downloadURL,
+            imageRef: uniqueFilename,
+            title: titleInput.value.trim(),
+            description: descInput.value.trim(),
+            date: formattedDate,
+            ownership: ownerInput.value.trim() || localStorage.getItem("defaultOwnership"),
+            folder: folderSelect.value
+        };
         
-        const uploadBtn = document.getElementById("submit-upload");
-        const originalText = uploadBtn.innerText;
-        uploadBtn.innerText = "Publishing...";
-        uploadBtn.disabled = true;
-
-        try {
-            // Upload to Firebase Storage
-            const uniqueFilename = `artworks/${Date.now()}_${file.name}`;
-            const storageRef = ref(storage, uniqueFilename);
-            await uploadString(storageRef, base64Img, 'data_url');
-            const downloadURL = await getDownloadURL(storageRef);
-
-            const newArtwork = {
-                timestamp: Date.now(),
-                image: downloadURL,
-                imageRef: uniqueFilename,
-                title: titleInput.value.trim(),
-                description: descInput.value.trim(),
-                date: formattedDate,
-                ownership: ownerInput.value.trim() || localStorage.getItem("defaultOwnership"),
-                folder: folderSelect.value
-            };
-            
-            // Save to Firestore
-            await addDoc(collection(db, "artworks"), newArtwork);
-            
-            fileInput.value = "";
-            titleInput.value = "";
-            descInput.value = "";
-            ownerInput.value = localStorage.getItem("defaultOwnership");
-            
-            alert("High-resolution graphic published successfully.");
-            renderGallery();
-            renderAdminArtworkList();
-        } catch (error) {
-            console.error(error);
-            alert("Error saving the artwork asset. Ensure Firebase config is correct and rules allow writes.");
-        } finally {
-            uploadBtn.innerText = originalText;
-            uploadBtn.disabled = false;
-        }
-    };
-    
-    reader.readAsDataURL(file);
+        // Save to Firestore
+        await addDoc(collection(db, "artworks"), newArtwork);
+        
+        fileInput.value = "";
+        titleInput.value = "";
+        descInput.value = "";
+        ownerInput.value = localStorage.getItem("defaultOwnership");
+        
+        alert("High-resolution graphic published successfully.");
+        renderGallery();
+        renderAdminArtworkList();
+    } catch (error) {
+        console.error(error);
+        alert("Error saving the artwork asset. Ensure Firebase config is correct and rules allow writes.");
+    } finally {
+        uploadBtn.innerText = originalText;
+        uploadBtn.disabled = false;
+    }
 });
 
 async function renderGallery() {
