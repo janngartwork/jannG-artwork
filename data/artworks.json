@@ -1,8 +1,7 @@
 {
   "folders": [
     "Bridal",
-    "Pageantry",
-    "HUNTER HUNTER"
+    "Pageantry"
   ],
   "artworks": [
     {
@@ -21,7 +20,7 @@
       "description": "NEN MASTER",
       "date": "June 1, 2026",
       "ownership": "JANN G. ARTWORK",
-      "folder": "HUNTER HUNTER"
+      "folder": "Unassigned"
     }
   ]
 }
