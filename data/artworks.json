@@ -1,6 +1,38 @@
 {
-  "folders": [],
+  "folders": [
+    "Bridal",
+    "Pageantry",
+    "HUNTER HUNTER",
+    "YEARNER"
+  ],
   "artworks": [
+    {
+      "id": 1780299275510,
+      "image": "https://raw.githubusercontent.com/janngartwork/jannG-artwork/master/images/artwork_1780299272939.png",
+      "title": "Nosnim",
+      "description": "",
+      "date": "June 1, 2026",
+      "ownership": "JANN G. ARTWORK",
+      "folder": "YEARNER"
+    },
+    {
+      "id": 1780299242914,
+      "image": "https://raw.githubusercontent.com/janngartwork/jannG-artwork/master/images/artwork_1780299240708.png",
+      "title": "Nosnim",
+      "description": "",
+      "date": "June 1, 2026",
+      "ownership": "JANN G. ARTWORK",
+      "folder": "YEARNER"
+    },
+    {
+      "id": 1780288472024,
+      "image": "https://raw.githubusercontent.com/winson24/jann-artwork/master/images/artwork_1780288469635.jpg",
+      "title": "GON",
+      "description": "NEN MASTER",
+      "date": "June 1, 2026",
+      "ownership": "JANN G. ARTWORK",
+      "folder": "HUNTER HUNTER"
+    },
     {
       "id": 1780285913159,
       "image": "https://raw.githubusercontent.com/winson24/jann-artwork/master/images/artwork_1780285909052.png",
@@ -8,7 +40,7 @@
       "description": "DEAN",
       "date": "June 1, 2026",
       "ownership": "JANN G. ARTWORK",
-      "folder": "Unassigned"
+      "folder": "YEARNER"
     },
     {
       "id": 1780285866006,
@@ -17,7 +49,7 @@
       "description": "NEN MASTER",
       "date": "June 1, 2026",
       "ownership": "JANN G. ARTWORK",
-      "folder": "Unassigned"
+      "folder": "HUNTER HUNTER"
     }
   ]
 }
