@@ -2,5 +2,15 @@
   "folders": [
     "COUTURE"
   ],
-  "artworks": []
+  "artworks": [
+    {
+      "id": 1780305883835,
+      "image": "https://raw.githubusercontent.com/janngartwork/jannG-artwork/master/images/artwork_1780305832076.png",
+      "title": "PINTA",
+      "description": "\"Pinta\" is a striking, high-fashion evening gown illustration that balances dramatic volume with a sleek, structured silhouette. The design exudes modern glamour, relying heavily on texture, contrast, and shimmering details to create a captivating visual impact.",
+      "date": "June 1, 2026",
+      "ownership": "JANN G.",
+      "folder": "COUTURE"
+    }
+  ]
 }
