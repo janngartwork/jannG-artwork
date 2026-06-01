@@ -157,10 +157,12 @@ main {
 
 .modal-content {
     background-color: #ffffff;
-    margin: 8% auto;
+    margin: 4% auto;
     padding: 40px;
     width: 90%;
     max-width: 500px;
+    max-height: 88vh;
+    overflow-y: auto;
     border: 1px solid #a89260;
     position: relative;
 }
