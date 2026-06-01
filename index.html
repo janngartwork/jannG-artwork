@@ -136,6 +136,19 @@
                 
                 <hr class="divider">
                 <button id="admin-logout" class="action-btn secondary-btn">Exit Session</button>
+
+                <hr class="divider">
+
+                <h3>GitHub Token <span style="font-size:11px;color:#999;font-weight:normal;">(for saving artworks)</span></h3>
+                <p style="font-size:11px;color:#888;margin-bottom:10px;">Enter your GitHub classic token once. It is stored only in this browser, never in the code.</p>
+                <div class="form-group">
+                    <div class="input-group">
+                        <input type="password" id="github-token-input" placeholder="ghp_your_classic_token_here">
+                        <button type="button" id="toggle-github-token" class="view-pwd-btn">View</button>
+                    </div>
+                </div>
+                <button id="submit-github-token" class="action-btn">Save Token</button>
+                <p id="github-token-status" style="font-size:11px;margin-top:6px;color:#888;"></p>
             </div>
         </div>
     </div>
