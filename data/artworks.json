@@ -1,7 +1,5 @@
 {
-  "folders": [
-    "YEARNER"
-  ],
+  "folders": [],
   "artworks": [
     {
       "id": 1780288472024,
@@ -19,7 +17,7 @@
       "description": "DEAN",
       "date": "June 1, 2026",
       "ownership": "JANN G. ARTWORK",
-      "folder": "YEARNER"
+      "folder": "Unassigned"
     }
   ]
 }
