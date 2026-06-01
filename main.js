@@ -162,8 +162,11 @@ async function uploadImageToImgBB(file) {
         const data = await res.json();
         if (!data.success) throw new Error(data.error?.message || "Upload failed");
 
-        // Return the direct image URL (permanent, public)
-        return data.data.url;
+        // Use display_url — this is the DIRECT image URL that works in <img> tags
+        // data.data.url can sometimes be the viewer page, display_url is always the raw image
+        const imageUrl = data.data.display_url || data.data.image?.url || data.data.url;
+        console.log("ImgBB upload success. URL:", imageUrl);
+        return imageUrl;
     } catch (err) {
         alert("Image upload to ImgBB failed: " + err.message);
         return null;
