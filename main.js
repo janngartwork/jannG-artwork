@@ -6,10 +6,10 @@ const CONFIG = {
     IMGBB_API_KEY: "425cd153d4752002c46373adf472529f",
 
     // GitHub username
-    GITHUB_USERNAME: "winson24",
+    GITHUB_USERNAME: "janngartwork",
 
     // GitHub repository name
-    GITHUB_REPO: "jann-artwork",
+    GITHUB_REPO: "jannG-artwork",
 
     // GitHub token is stored in localStorage (entered via Admin Panel)
     // This keeps it out of the source code so GitHub won't block it
@@ -25,7 +25,7 @@ const CONFIG = {
 // ============================================================
 // System Constants & State
 // ============================================================
-const DEFAULT_PASSWORD = "JANN_ADMIN_ACCESS";
+const DEFAULT_PASSWORD = "JANNG_ADMIN";
 const DEFAULT_QUESTION = "What is the name of your signature brand?";
 const DEFAULT_ANSWER = "Jann's Creation";
 
