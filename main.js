@@ -1,5 +1,5 @@
 // ============================================================
-// CONFIGURATION — Fill these in before deploying!
+// CONFIGURATION
 // ============================================================
 const CONFIG = {
     // ImgBB API key for free cloud image hosting
@@ -11,12 +11,16 @@ const CONFIG = {
     // GitHub repository name
     GITHUB_REPO: "jann-artwork",
 
-    // GitHub Personal Access Token (repo scope)
-    GITHUB_TOKEN: "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",
+    // GitHub token is stored in localStorage (entered via Admin Panel)
+    // This keeps it out of the source code so GitHub won't block it
+    get GITHUB_TOKEN() {
+        return localStorage.getItem("githubToken") || "";
+    },
 
     // Path in your repo where artwork data JSON will be saved
     DATA_FILE_PATH: "data/artworks.json"
 };
+
 
 // ============================================================
 // System Constants & State
@@ -302,6 +306,17 @@ function openAdminPanel() {
 
     document.getElementById("new-security-question").value = localStorage.getItem("securityQuestion");
     document.getElementById("new-security-answer").value = localStorage.getItem("securityAnswer");
+
+    // Load saved GitHub token status
+    const savedToken = localStorage.getItem("githubToken");
+    const statusEl = document.getElementById("github-token-status");
+    if (savedToken) {
+        statusEl.textContent = "✅ Token saved — " + savedToken.substring(0, 8) + "...";
+        statusEl.style.color = "#2e7d32";
+    } else {
+        statusEl.textContent = "⚠️ No token saved yet. Upload will fail without it.";
+        statusEl.style.color = "#c62828";
+    }
 }
 
 // ============================================================
@@ -676,3 +691,26 @@ document.getElementById("admin-logout").addEventListener("click", () => {
     renderGallery();
     alert("Session closed.");
 });
+
+// ============================================================
+// GitHub Token — Save to localStorage
+// ============================================================
+document.getElementById("submit-github-token").addEventListener("click", () => {
+    const tokenInput = document.getElementById("github-token-input");
+    const statusEl = document.getElementById("github-token-status");
+    const val = tokenInput.value.trim();
+
+    if (!val) {
+        statusEl.textContent = "⚠️ Please enter a token.";
+        statusEl.style.color = "#c62828";
+        return;
+    }
+
+    localStorage.setItem("githubToken", val);
+    tokenInput.value = "";
+    statusEl.textContent = "✅ Token saved — " + val.substring(0, 8) + "...";
+    statusEl.style.color = "#2e7d32";
+    alert("GitHub token saved! You can now upload artworks.");
+});
+
+setupPasswordToggle("toggle-github-token", "github-token-input");
