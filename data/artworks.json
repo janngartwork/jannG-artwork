@@ -1,18 +1,17 @@
 {
-    "artworks":  [
-                     {
-                         "id":  1780284707496,
-                         "description":  "NEN MASTER",
-                         "folder":  "HUNTER HUNTER",
-                         "date":  "June 1, 2026",
-                         "image":  "https://raw.githubusercontent.com/winson24/jann-artwork/master/images/artwork_1780284705347.jpg",
-                         "ownership":  "JANN G. ARTWORK",
-                         "title":  "GON"
-                     }
-                 ],
-    "folders":  [
-                    "Bridal",
-                    "Pageantry",
-                    "HUNTER HUNTER"
-                ]
+  "folders": [
+    "Bridal",
+    "Pageantry"
+  ],
+  "artworks": [
+    {
+      "id": 1780284707496,
+      "description": "NEN MASTER",
+      "folder": "Unassigned",
+      "date": "June 1, 2026",
+      "image": "https://raw.githubusercontent.com/winson24/jann-artwork/master/images/artwork_1780284705347.jpg",
+      "ownership": "JANN G. ARTWORK",
+      "title": "GON"
+    }
+  ]
 }
