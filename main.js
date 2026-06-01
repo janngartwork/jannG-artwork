@@ -139,39 +139,63 @@ async function saveArtworksToGitHub() {
 }
 
 // ============================================================
-// ImgBB Upload — Upload image and return public URL
+// GitHub Image Upload — Store image directly in the repo
 // ============================================================
-async function uploadImageToImgBB(file) {
-    if (CONFIG.IMGBB_API_KEY === "YOUR_IMGBB_API_KEY") {
-        alert("ImgBB API key not configured. Please set CONFIG.IMGBB_API_KEY in main.js\n\nGet a free key at: https://api.imgbb.com/");
+async function uploadImageToGitHub(file) {
+    const token = localStorage.getItem("githubToken");
+    if (!token) {
+        alert("⚠️ No GitHub token saved.\n\nGo to Privacy & Security tab → scroll down → Save Token first.");
         return null;
     }
 
-    const formData = new FormData();
-    formData.append("image", file);
-    formData.append("key", CONFIG.IMGBB_API_KEY);
+    // Convert file to base64
+    const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            // Remove the "data:image/jpeg;base64," prefix
+            const b64 = reader.result.split(",")[1];
+            resolve(b64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+
+    // Create a unique filename using timestamp + original name
+    const ext = file.name.split(".").pop().toLowerCase();
+    const fileName = `artwork_${Date.now()}.${ext}`;
+    const repoPath = `images/${fileName}`;
+    const apiUrl = `https://api.github.com/repos/${CONFIG.GITHUB_USERNAME}/${CONFIG.GITHUB_REPO}/contents/${repoPath}`;
 
     try {
-        const res = await fetch("https://api.imgbb.com/1/upload", {
-            method: "POST",
-            body: formData
+        const res = await fetch(apiUrl, {
+            method: "PUT",
+            headers: {
+                "Authorization": `token ${token}`,
+                "Accept": "application/vnd.github.v3+json",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                message: `Upload artwork: ${fileName}`,
+                content: base64
+            })
         });
 
-        if (!res.ok) throw new Error(`ImgBB error: ${res.status}`);
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.message || res.status);
+        }
 
-        const data = await res.json();
-        if (!data.success) throw new Error(data.error?.message || "Upload failed");
+        // Return the raw public URL — works in any browser, any device
+        const rawUrl = `https://raw.githubusercontent.com/${CONFIG.GITHUB_USERNAME}/${CONFIG.GITHUB_REPO}/master/${repoPath}`;
+        console.log("Image uploaded to GitHub:", rawUrl);
+        return rawUrl;
 
-        // Use display_url — this is the DIRECT image URL that works in <img> tags
-        // data.data.url can sometimes be the viewer page, display_url is always the raw image
-        const imageUrl = data.data.display_url || data.data.image?.url || data.data.url;
-        console.log("ImgBB upload success. URL:", imageUrl);
-        return imageUrl;
     } catch (err) {
-        alert("Image upload to ImgBB failed: " + err.message);
+        alert("❌ Image upload failed: " + err.message);
         return null;
     }
 }
+
 
 // ============================================================
 // DOM Elements
@@ -521,8 +545,8 @@ document.getElementById("submit-upload").addEventListener("click", async () => {
 
     const file = fileInput.files[0];
 
-    // Step 1: Upload image to ImgBB (get public URL)
-    const imageUrl = await uploadImageToImgBB(file);
+    // Upload image directly to GitHub repo (reliable, no third-party)
+    const imageUrl = await uploadImageToGitHub(file);
     if (!imageUrl) {
         uploadBtn.disabled = false;
         uploadBtn.innerText = "Publish Illustration";
