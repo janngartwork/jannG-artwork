@@ -31,13 +31,13 @@ const DEFAULT_ANSWER = "Jann's Creation";
 
 let currentFolderFilter = "all";
 let isAdminAuthenticated = false;
-let artworkData = []; // Loaded from GitHub JSON
+let artworkData = [];   // Loaded from GitHub
+let folderData = ["Bridal", "Pageantry"]; // Loaded from GitHub
 
-// Initialize Storage Defaults if Empty
+// Initialize Storage Defaults if Empty (password/security only — not folders)
 if (!localStorage.getItem("adminPassword")) localStorage.setItem("adminPassword", DEFAULT_PASSWORD);
 if (!localStorage.getItem("securityQuestion")) localStorage.setItem("securityQuestion", DEFAULT_QUESTION);
 if (!localStorage.getItem("securityAnswer")) localStorage.setItem("securityAnswer", DEFAULT_ANSWER);
-if (!localStorage.getItem("folders")) localStorage.setItem("folders", JSON.stringify(["Bridal", "Pageantry"]));
 
 // Profile Defaults
 if (!localStorage.getItem("brandName")) localStorage.setItem("brandName", "JANN G. ARTWORK");
@@ -52,23 +52,17 @@ if (!localStorage.getItem("contactPlatforms")) {
 // GitHub Data API — Load & Save artworks.json in the repo
 // ============================================================
 
-// Fetch artworks from GitHub repo JSON file
-async function loadArtworksFromGitHub() {
+// ============================================================
+// Load ALL site data from GitHub (folders + artworks)
+// ============================================================
+async function loadDataFromGitHub() {
     const url = `https://api.github.com/repos/${CONFIG.GITHUB_USERNAME}/${CONFIG.GITHUB_REPO}/contents/${CONFIG.DATA_FILE_PATH}`;
     try {
-        const res = await fetch(url, {
-            headers: {
-                "Accept": "application/vnd.github.v3+json",
-                // Use token only if set (for admin saves); public read doesn't need it
-                ...(CONFIG.GITHUB_TOKEN !== "YOUR_GITHUB_TOKEN" && {
-                    "Authorization": `token ${CONFIG.GITHUB_TOKEN}`
-                })
-            }
-        });
+        const res = await fetch(url, { headers: { "Accept": "application/vnd.github.v3+json" } });
 
         if (res.status === 404) {
-            // File doesn't exist yet — start fresh
             artworkData = [];
+            folderData = ["Bridal", "Pageantry"];
             return;
         }
 
@@ -76,55 +70,51 @@ async function loadArtworksFromGitHub() {
 
         const json = await res.json();
         const decoded = atob(json.content.replace(/\n/g, ""));
-        artworkData = JSON.parse(decoded);
+        const parsed = JSON.parse(decoded);
+
+        // Support both old format (array) and new format ({ folders, artworks })
+        if (Array.isArray(parsed)) {
+            artworkData = parsed;
+            folderData = ["Bridal", "Pageantry"];
+        } else {
+            artworkData = parsed.artworks || [];
+            folderData = parsed.folders || ["Bridal", "Pageantry"];
+        }
     } catch (err) {
-        console.warn("Could not load artworks from GitHub:", err.message);
+        console.warn("Could not load data from GitHub:", err.message);
         artworkData = [];
+        folderData = ["Bridal", "Pageantry"];
     }
 }
 
-// Save artworks to GitHub repo JSON file
-async function saveArtworksToGitHub() {
+// ============================================================
+// Save ALL site data to GitHub (folders + artworks together)
+// ============================================================
+async function saveDataToGitHub() {
     const token = localStorage.getItem("githubToken");
     if (!token) {
-        alert("❌ No GitHub token saved.\n\nGo to Admin → Privacy & Security → scroll to bottom → enter your GitHub token and click Save Token.");
+        alert("❌ No GitHub token saved.\n\nGo to Admin → Privacy & Security → scroll down → Save Token.");
         return false;
     }
 
     const url = `https://api.github.com/repos/${CONFIG.GITHUB_USERNAME}/${CONFIG.GITHUB_REPO}/contents/${CONFIG.DATA_FILE_PATH}`;
 
-    // Get current file SHA (needed for updates)
+    // Get current file SHA
     let sha = null;
     try {
-        const check = await fetch(url, {
-            headers: {
-                "Authorization": `token ${token}`,
-                "Accept": "application/vnd.github.v3+json"
-            }
-        });
-        if (check.ok) {
-            const existing = await check.json();
-            sha = existing.sha;
-        }
+        const check = await fetch(url, { headers: { "Authorization": `token ${token}`, "Accept": "application/vnd.github.v3+json" } });
+        if (check.ok) sha = (await check.json()).sha;
     } catch (_) {}
 
-    const content = btoa(unescape(encodeURIComponent(JSON.stringify(artworkData, null, 2))));
-
-    const body = {
-        message: `Update artworks.json — ${new Date().toISOString()}`,
-        content: content,
-        ...(sha && { sha })
-    };
+    // Save both folders AND artworks
+    const payload = { folders: folderData, artworks: artworkData };
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2))));
 
     try {
         const res = await fetch(url, {
             method: "PUT",
-            headers: {
-                "Authorization": `token ${token}`,
-                "Accept": "application/vnd.github.v3+json",
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(body)
+            headers: { "Authorization": `token ${token}`, "Accept": "application/vnd.github.v3+json", "Content-Type": "application/json" },
+            body: JSON.stringify({ message: `Update site data — ${new Date().toISOString()}`, content, ...(sha && { sha }) })
         });
 
         if (!res.ok) {
@@ -224,7 +214,8 @@ async function initApp() {
         gallery.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#999;padding:60px 0;">Loading gallery...</p>';
     }
 
-    await loadArtworksFromGitHub();
+    await loadDataFromGitHub();
+    renderFolderNavigation();
     renderGallery();
     populateFolderDropdown();
 }
@@ -422,13 +413,9 @@ document.getElementById("submit-profile-settings").addEventListener("click", () 
 // ============================================================
 // Folder Management
 // ============================================================
+// Folders now come from GitHub (folderData), not localStorage
 function getFolders() {
-    let folders = localStorage.getItem("folders");
-    if (!folders) {
-        folders = JSON.stringify(["Bridal", "Pageantry"]);
-        localStorage.setItem("folders", folders);
-    }
-    return JSON.parse(folders);
+    return folderData;
 }
 
 function renderFolderNavigation() {
@@ -469,44 +456,42 @@ function renderManageFolders() {
     });
 }
 
-document.getElementById("submit-folder").addEventListener("click", () => {
+document.getElementById("submit-folder").addEventListener("click", async () => {
     const nameInput = document.getElementById("new-folder-name");
     const folderName = nameInput.value.trim();
-
     if (!folderName) return;
 
-    let folders = getFolders();
-    if (!folders.includes(folderName)) {
-        folders.push(folderName);
-        localStorage.setItem("folders", JSON.stringify(folders));
+    if (!folderData.includes(folderName)) {
+        folderData.push(folderName);
         nameInput.value = "";
-
-        renderFolderNavigation();
-        populateFolderDropdown();
-        renderManageFolders();
+        const saved = await saveDataToGitHub();
+        if (saved) {
+            renderFolderNavigation();
+            populateFolderDropdown();
+            renderManageFolders();
+        } else {
+            folderData.pop(); // rollback
+        }
     }
 });
 
-function deleteFolder(index) {
-    let folders = getFolders();
-    const folderName = folders[index];
-
+async function deleteFolder(index) {
+    const folderName = folderData[index];
     if (confirm(`Delete folder "${folderName}"? Artworks inside will be unassigned.`)) {
-        folders.splice(index, 1);
-        localStorage.setItem("folders", JSON.stringify(folders));
-
-        // Update artworks in memory
+        folderData.splice(index, 1);
         artworkData = artworkData.map(art => {
             if (art.folder === folderName) art.folder = "Unassigned";
             return art;
         });
-
-        if (currentFolderFilter === folderName) currentFolderFilter = "all";
-        renderFolderNavigation();
-        populateFolderDropdown();
-        renderManageFolders();
-        renderGallery();
-        renderAdminArtworkList();
+        const saved = await saveDataToGitHub();
+        if (saved) {
+            if (currentFolderFilter === folderName) currentFolderFilter = "all";
+            renderFolderNavigation();
+            populateFolderDropdown();
+            renderManageFolders();
+            renderGallery();
+            renderAdminArtworkList();
+        }
     }
 }
 
@@ -575,7 +560,7 @@ document.getElementById("submit-upload").addEventListener("click", async () => {
     renderAdminArtworkList();
 
     // Step 4: Save to GitHub so ALL devices can see it
-    const saved = await saveArtworksToGitHub();
+    const saved = await saveDataToGitHub();
 
     if (saved) {
         fileInput.value = "";
@@ -684,13 +669,12 @@ function renderAdminArtworkList() {
 async function deleteArtwork(id) {
     if (confirm("Permanently delete this design?")) {
         artworkData = artworkData.filter(a => a.id !== id);
-        const saved = await saveArtworksToGitHub();
+        const saved = await saveDataToGitHub();
         if (saved) {
             renderGallery();
             renderAdminArtworkList();
         } else {
-            // Reload from GitHub on failure
-            await loadArtworksFromGitHub();
+            await loadDataFromGitHub();
             renderGallery();
             renderAdminArtworkList();
         }
