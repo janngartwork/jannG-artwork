@@ -85,8 +85,9 @@ async function loadArtworksFromGitHub() {
 
 // Save artworks to GitHub repo JSON file
 async function saveArtworksToGitHub() {
-    if (CONFIG.GITHUB_TOKEN === "YOUR_GITHUB_TOKEN") {
-        alert("GitHub token not configured. Please set CONFIG.GITHUB_TOKEN in main.js");
+    const token = localStorage.getItem("githubToken");
+    if (!token) {
+        alert("❌ No GitHub token saved.\n\nGo to Admin → Privacy & Security → scroll to bottom → enter your GitHub token and click Save Token.");
         return false;
     }
 
@@ -97,7 +98,7 @@ async function saveArtworksToGitHub() {
     try {
         const check = await fetch(url, {
             headers: {
-                "Authorization": `token ${CONFIG.GITHUB_TOKEN}`,
+                "Authorization": `token ${token}`,
                 "Accept": "application/vnd.github.v3+json"
             }
         });
@@ -119,7 +120,7 @@ async function saveArtworksToGitHub() {
         const res = await fetch(url, {
             method: "PUT",
             headers: {
-                "Authorization": `token ${CONFIG.GITHUB_TOKEN}`,
+                "Authorization": `token ${token}`,
                 "Accept": "application/vnd.github.v3+json",
                 "Content-Type": "application/json"
             },
@@ -132,7 +133,7 @@ async function saveArtworksToGitHub() {
         }
         return true;
     } catch (err) {
-        alert("Failed to save to GitHub: " + err.message);
+        alert("❌ Failed to save to GitHub: " + err.message + "\n\nCheck your token in Privacy & Security tab.");
         return false;
     }
 }
@@ -504,9 +505,16 @@ document.getElementById("submit-upload").addEventListener("click", async () => {
         return;
     }
 
+    // Block upload if GitHub token not saved yet
+    const savedToken = localStorage.getItem("githubToken");
+    if (!savedToken) {
+        alert("⚠️ GitHub token not set!\n\nGo to Privacy & Security tab → scroll to the bottom → paste your GitHub token → click Save Token.\n\nThen come back here to upload.");
+        return;
+    }
+
     // Disable button during upload
     uploadBtn.disabled = true;
-    uploadBtn.innerText = "Uploading to ImgBB...";
+    uploadBtn.innerText = "Uploading image...";
 
     const file = fileInput.files[0];
 
@@ -526,7 +534,7 @@ document.getElementById("submit-upload").addEventListener("click", async () => {
 
     const newArtwork = {
         id: Date.now(),
-        image: imageUrl,                 // Public ImgBB URL — visible to everyone!
+        image: imageUrl,
         title: titleInput.value.trim(),
         description: descInput.value.trim(),
         date: formattedDate,
@@ -534,8 +542,12 @@ document.getElementById("submit-upload").addEventListener("click", async () => {
         folder: folderSelect.value
     };
 
-    // Step 3: Add to local data and save to GitHub
+    // Step 3: Add to in-memory data + show in gallery immediately
     artworkData.unshift(newArtwork);
+    renderGallery();
+    renderAdminArtworkList();
+
+    // Step 4: Save to GitHub so ALL devices can see it
     const saved = await saveArtworksToGitHub();
 
     if (saved) {
@@ -543,13 +555,9 @@ document.getElementById("submit-upload").addEventListener("click", async () => {
         titleInput.value = "";
         descInput.value = "";
         ownerInput.value = localStorage.getItem("defaultOwnership");
-
-        renderGallery();
-        renderAdminArtworkList();
-        alert("Illustration published successfully! It will be visible to everyone who opens the site.");
+        alert("✅ Illustration published! Everyone who opens the site will see it.");
     } else {
-        // Rollback if save failed
-        artworkData.shift();
+        alert("⚠️ Image uploaded to ImgBB but NOT saved to GitHub.\nFix your token in Privacy & Security tab, then try again.");
     }
 
     uploadBtn.disabled = false;
