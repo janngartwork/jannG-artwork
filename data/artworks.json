@@ -6,6 +6,15 @@
   ],
   "artworks": [
     {
+      "id": 1780285711125,
+      "image": "https://raw.githubusercontent.com/winson24/jann-artwork/master/images/artwork_1780285709108.jpg",
+      "title": "GON RAGE",
+      "description": "NEN MASTER",
+      "date": "June 1, 2026",
+      "ownership": "JANN G. ARTWORK",
+      "folder": "ANIME"
+    },
+    {
       "id": 1780284707496,
       "description": "NEN MASTER",
       "folder": "Unassigned",
