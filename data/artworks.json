@@ -4,5 +4,15 @@
     "Pageantry",
     "HUNTER HUNTER"
   ],
-  "artworks": []
+  "artworks": [
+    {
+      "id": 1780285829497,
+      "image": "https://raw.githubusercontent.com/winson24/jann-artwork/master/images/artwork_1780285827608.jpg",
+      "title": "GON",
+      "description": "NEN MASTER",
+      "date": "June 1, 2026",
+      "ownership": "JANN G. ARTWORK",
+      "folder": "Unassigned"
+    }
+  ]
 }
