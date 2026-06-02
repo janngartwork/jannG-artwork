@@ -4,6 +4,15 @@
   ],
   "artworks": [
     {
+      "id": 1780370485346,
+      "image": "https://raw.githubusercontent.com/janngartwork/jannG-artwork/master/images/artwork_1780370457610.png",
+      "title": "GAZINI",
+      "description": "This haute couture evening gown is a masterclass in structure, transparency, and regal opulence, seamlessly blending a sultry silhouette with architectural majesty.",
+      "date": "June 2, 2026",
+      "ownership": "JANN G.",
+      "folder": "COUTURE"
+    },
+    {
       "id": 1780307502070,
       "image": "https://raw.githubusercontent.com/janngartwork/jannG-artwork/master/images/artwork_1780307422713.png",
       "title": "RUBY",
