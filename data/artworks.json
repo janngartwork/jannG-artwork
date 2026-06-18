@@ -5,6 +5,15 @@
   ],
   "artworks": [
     {
+      "id": 1781749010134,
+      "image": "https://raw.githubusercontent.com/janngartwork/jannG-artwork/master/images/artwork_1781748979212.png",
+      "title": "Catriona gray",
+      "description": "Miss Universe 2018",
+      "date": "June 18, 2026",
+      "ownership": "JANN G.",
+      "folder": "PAGEANT"
+    },
+    {
       "id": 1781318768696,
       "image": "https://raw.githubusercontent.com/janngartwork/jannG-artwork/master/images/artwork_1781318742541.png",
       "title": "Crystal",
