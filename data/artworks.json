@@ -6,6 +6,15 @@
   ],
   "artworks": [
     {
+      "id": 1782146903074,
+      "image": "https://raw.githubusercontent.com/janngartwork/jannG-artwork/master/images/artwork_1782146897756.png",
+      "title": "The Onyx Lace Mermaid Gown",
+      "description": "Crafted from an exquisite, sheer black textile overlaid with intricate floral lace embroidery. The gown is subtly embellished with delicate, reflective micro-crystals or sequins scattered throughout, catching the light like a star-filled night sky.",
+      "date": "June 23, 2026",
+      "ownership": "JANN G.",
+      "folder": "LACE"
+    },
+    {
       "id": 1781749010134,
       "image": "https://raw.githubusercontent.com/janngartwork/jannG-artwork/master/images/artwork_1781748979212.png",
       "title": "Catriona gray",
